@@ -26,4 +26,27 @@ boot(app, __dirname, function(err) {
   // start the server if `$ node server.js`
   if (require.main === module)
     app.start();
+
+  var request = require('request');
+  function callback(error, response, body) {
+    console.info("\n>>> response start");
+    var info = JSON.parse(body);
+    console.log(info);
+    console.info("<<< response end\n");
+  }
+
+  var options = {
+    baseUrl: 'http://127.0.0.1:3000/api/',
+    uri: 'Messages/greet',
+    method: 'GET',
+    headers: {},
+    // note: we need use >>snakeCase<< in qs
+    qs: {
+      msg: 0
+    },
+  };
+
+  setTimeout(function () {
+    request(options, callback);
+  }, 500);
 });
