@@ -1,6 +1,9 @@
 var psErr = require('../../server/data/error-code.js');
+var dateFormat = require('dateformat');
 
 module.exports = function(TimeLog) {
+
+  /***************** Common method *******************/
 
   TimeLog.createTable = function() {
     var ds = TimeLog.app.dataSources.db;
@@ -27,6 +30,8 @@ module.exports = function(TimeLog) {
     };
     return output;
   };
+
+  /***************** Define remote method logic *******************/
 
   TimeLog.updateToday = function(data, callback) {
     var rawArr = data.split('\n');
@@ -55,12 +60,58 @@ module.exports = function(TimeLog) {
     });
   };
 
-  /**
-   * Defind remote method
-   */
+  TimeLog.month = function(date, period, callback) {
+    period = period || 30;
+    var oneDay = 24 * 60 * 60 * 1000;
+    var periodDay = (period - 1) * oneDay;
+    var yesterday = new Date(new Date() - oneDay);
+    var saveDate = dateFormat(yesterday, 'isoDate');
+    var startDate = dateFormat(new Date(new Date(saveDate) - periodDay), 'isoDate');
+    date = date || saveDate;
+    console.dir(yesterday);
+    var filter = {
+      where: {
+        and: [
+          { saveDate: { gt: startDate } },
+          { saveDate: { lte: saveDate } }
+        ]
+      }
+    };
+    TimeLog.find(filter).then(function(res) {
+      callback(null, res);
+    }).catch(function(err) {
+      callback(err);
+    });
+    // console.dir(startDate);
+    // callback(null, saveDate);
+    
+  };
+
+  /***************** Defind remote method *******************/
+
   TimeLog.remoteMethod('updateToday', {
     returns: { type: "string", arg: "update"},
     http: { verb: 'get', path: '/update', status: 200 },
     description: 'Read report.txt file and create new records in Postgres.'
   });
+
+  TimeLog.remoteMethod('month', {
+    accepts: [{
+      arg: "date",
+      type: "string",
+      description: "Which day is the basic day? e.g.'2017-03-03'",
+      http: { source: "query" },
+      required: false
+    }, {
+      arg: "period",
+      type: "number",
+      description: "How many the nearest day query for ?",
+      http: { source: "query" },
+      required: false
+    }],
+    returns: { type: "object", root: true },
+    http: { verb: "get", path: "/month", status: 200 },
+    description: "Display the time log of the specify days."
+  });
+
 };

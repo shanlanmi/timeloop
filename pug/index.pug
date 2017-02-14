@@ -2,7 +2,9 @@ doctype html
 html(lang="en")
   head
     title= TimeLogger
-    script(type='text/javascript').
-      if (foo) bar(1 + 5)
+    script(type='text/javascript' src="js/lib/gstatic-loader.js")
+    script(type='text/javascript' src="js/google-chart.js")
+    script(type='text/javascript' src="js/main.js")
   body
     h1 TimeLogger
+    #table_div

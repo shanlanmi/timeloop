@@ -2,8 +2,8 @@
  * This is the options of a request, using by gulp task 'default' with option `-a`
  */
 module.exports = {
-  baseUrl: 'http://127.0.0.1:4000/api/',
-  uri: 'test/hot',
+  baseUrl: 'http://127.0.0.1:3100/api/',
+  uri: 'Timelogs/month',
   method: "GET",
   headers: {
     // 'X-USER-EMAIL': 'stella@example.com',
@@ -13,6 +13,7 @@ module.exports = {
    * note: we need use snakeCase in qs
    */
   qs: {
+    period: 3
     // page: 1,
     // per_page: 2,
   },

@@ -9,6 +9,7 @@ var argv = require('yargs').argv;
 var pug = require('gulp-pug');
 var sass = require('gulp-sass');
 var browserSync = require('browser-sync').create();
+var request = require('request');
 var reqOpt = require('./server/data/auto-request');
 
 var notifier = function(str) {
@@ -34,7 +35,7 @@ var autoReq = function() {
     console.info(message);
     setTimeout(function () {
       request(reqOpt, callback);
-    }, 6000);
+    }, 8000);
   }
 };
 
@@ -45,7 +46,7 @@ var autoReq = function() {
 gulp.task('default', ['source', 'sass', 'pug'], function () {
   var opt = { script: 'server/server.js',
     ext: 'js json',
-    ignore: ['ignored.js'],
+    ignore: ['ignored.js', 'client/js/*.js'],
     tasks: ['sass', 'pug'],
   };
   if (argv.m) {
@@ -86,7 +87,7 @@ gulp.task('pug', function() {
     console.error(err);
     pugCompile.end()
   });
-  var dest = './client/templates/';
+  var dest = './client';
   return gulp.src(watchs.pug)
     .pipe(changed(dest, {extension: '.html'}))
     .pipe(pugCompile)
@@ -111,7 +112,7 @@ gulp.task('sass', function() {
 gulp.task('watch', function() {
   browserSync.init({
     files: "./client/**",
-    server: "./client/templates"
+    server: "./client"
   });
   gulp.watch(watchs.sass, ['sass']);
   gulp.watch(watchs.pug, ['pug']);

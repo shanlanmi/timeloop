@@ -1,6 +1,0 @@
-{
-  "db": {
-    "url": "postgres://shanlanmi@localhost:5432/shanlanmi",
-    "connector": "postgresql"
-  }
-}

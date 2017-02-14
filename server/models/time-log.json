@@ -11,7 +11,8 @@
     "Timestamp": {},
     "DisableAllMethods": {
       "expose": [
-        "updateToday"
+        "updateToday",
+        "month"
       ]
     },
     "GetContext": {}
