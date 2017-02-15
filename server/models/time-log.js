@@ -17,13 +17,9 @@ module.exports = function(TimeLog) {
     });
   };
 
-  var rmTimezone = function(str) {
-    return str.replace(/\+.*$/, "");
-  };
-
   var toLocal = function(date) {
     if (typeof date === "string" && /\+\d{2}/.test(date)) {
-      data = new Date(rmTimezone(date));
+      data = new Date(date.replace(/\+.*$/, ""));
     }
     var local = date.toLocaleString('en-US', {
       hour12: false,
@@ -50,43 +46,47 @@ module.exports = function(TimeLog) {
     return date;
   };
 
-  var parseSigleItem = function (str) {
-    var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
-    var today = new Date();
-    var year = today.getFullYear();
-    var start = new Date(arr[1]).setFullYear(year);
-    var end = new Date(arr[2]).setFullYear(year);
-    var output = {
-      label: arr[0],
-      saveDate: toUTC(toStartDay(start)),
-      // saveDate: toUTC(new Date(year + arr[1].replace(/,.*$/, ""))),
-      start: toUTC(start),
-      end: toUTC(end),
-    };
-    return output;
-  };
-
-  // TODO: 先检查, 在生成, 生成是最后一步
-  var checkOverNight = function(oneTask) {
+  var checkOverNight = function(start, end) {
     var getDay = function(str) {
-      return new Date(rmTimezone(str)).getDate();
+      return new Date(str).getDate();
     };
-    var startDay = getDay(oneTask.start);
-    var endDay = getDay(oneTask.end);
+    var startDay = getDay(start);
+    var endDay = getDay(end);
     if (startDay === endDay) {
       return false;
     }
     return true;
   };
 
-  var splitOverNight = function(oneTask) {
-    var middleNight = toUTC(toStartDay(rmTimezone(oneTask.end)));
-    var first = Object.assign({}, oneTask);
-    var second = Object.assign({}, oneTask);
-    first.end = middleNight;
-    second.start = middleNight;
-    return [first, second];
-  }
+  var parseSigleItem = function(str) {
+    var output = [];
+    var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
+    var today = new Date();
+    var year = today.getFullYear();
+    var start = new Date(arr[1]).setFullYear(year);
+    var end = new Date(arr[2]).setFullYear(year);
+    if (checkOverNight(start, end)) {
+      var middleNight = toStartDay(end);
+      return output = [{
+        label: arr[0],
+        saveDate: toUTC(toStartDay(start)),
+        start: toUTC(start),
+        end: toUTC(middleNight),
+      }, {
+        label: arr[0],
+        saveDate: toUTC(toStartDay(middleNight)),
+        start: toUTC(middleNight),
+        end: toUTC(end),
+      }];
+    } else {
+      return output = [{
+        label: arr[0],
+        saveDate: toUTC(toStartDay(start)),
+        start: toUTC(start),
+        end: toUTC(end),
+      }];
+    }
+  };
 
   /***************** Define remote method logic *******************/
 
@@ -108,14 +108,9 @@ module.exports = function(TimeLog) {
         saveDates.push(parseItem.saveDate);
       }
 
-      if (checkOverNight(parseItem)) {
-        var split = splitOverNight(parseItem);
-        finanlyArr.push(split[0]);
-        finanlyArr.push(split[1]);
-      } else {
-        finanlyArr.push(parseItem);
-      }
-      return null;
+      parseItem.forEach(function(i) {
+        finanlyArr.push(i);
+      });
     });
     var where = {
       saveDate: {
