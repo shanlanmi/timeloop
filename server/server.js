@@ -39,9 +39,9 @@ boot(app, __dirname, function(err) {
       encoding: 'utf8'
     });
     // app.models.TimeLog.createTable();
-    app.models.TimeLog.updateToday(reportData, function(err, res) {
+    app.models.TimeLog.updateDatebase(reportData, function(err, res) {
       if (err) { return console.error(err); }
-      return console.dir(res);
+      return;
     });
   }, 500);
 });

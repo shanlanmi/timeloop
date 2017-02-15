@@ -1,5 +1,7 @@
 var psErr = require('../../server/data/error-code.js');
 var dateFormat = require('dateformat');
+var _ = require('lodash');
+var rules = require('./lib/rules.js');
 
 module.exports = function(TimeLog) {
 
@@ -15,46 +17,118 @@ module.exports = function(TimeLog) {
     });
   };
 
+  var rmTimezone = function(str) {
+    return str.replace(/\+.*$/, "");
+  };
+
+  var toLocal = function(date) {
+    if (typeof date === "string" && /\+\d{2}/.test(date)) {
+      data = new Date(rmTimezone(date));
+    }
+    var local = date.toLocaleString('en-US', {
+      hour12: false,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    return local;
+  };
+
+  var toUTC = function(date) {
+    date = new Date(date);
+    return date.toISOString().replace(/Z/, "+00");
+  };
+
+  var toStartDay = function(date) {
+    date = new Date(date);
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    return date;
+  };
+
   var parseSigleItem = function (str) {
     var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
     var today = new Date();
     var year = today.getFullYear();
-    var start = new Date(year + arr[1]).toLocaleString() + "+08";
-    var end = new Date(year + arr[2]).toLocaleString() + "+08";
-    var saveDate = start.replace(/,.*$/, "");
+    var start = new Date(arr[1]).setFullYear(year);
+    var end = new Date(arr[2]).setFullYear(year);
     var output = {
       label: arr[0],
-      saveDate,
-      start,
-      end
+      saveDate: toUTC(toStartDay(start)),
+      // saveDate: toUTC(new Date(year + arr[1].replace(/,.*$/, ""))),
+      start: toUTC(start),
+      end: toUTC(end),
     };
     return output;
   };
 
+  // TODO: 先检查, 在生成, 生成是最后一步
+  var checkOverNight = function(oneTask) {
+    var getDay = function(str) {
+      return new Date(rmTimezone(str)).getDate();
+    };
+    var startDay = getDay(oneTask.start);
+    var endDay = getDay(oneTask.end);
+    if (startDay === endDay) {
+      return false;
+    }
+    return true;
+  };
+
+  var splitOverNight = function(oneTask) {
+    var middleNight = toUTC(toStartDay(rmTimezone(oneTask.end)));
+    var first = Object.assign({}, oneTask);
+    var second = Object.assign({}, oneTask);
+    first.end = middleNight;
+    second.start = middleNight;
+    return [first, second];
+  }
+
   /***************** Define remote method logic *******************/
 
-  TimeLog.updateToday = function(data, callback) {
+  TimeLog.updateDatebase = function(data, callback) {
     var rawArr = data.split('\n');
     var finanlyArr = [];
+    var saveDates = [];
     var noTotal = false;
-    rawArr.forEach(function(item) {
+    rawArr.forEach(function(item, index) {
       if (/Type,/.test(item) || item.length === 0 || noTotal) {
         return;
       }
       if (/^,/.test(item)) {
-        noTotal = true;
-        return;
+        return noTotal = true;
       }
-      finanlyArr.push(parseSigleItem(item));
+
+      var parseItem = parseSigleItem(item);
+      if (saveDates.indexOf(parseItem.saveDate) === -1) {
+        saveDates.push(parseItem.saveDate);
+      }
+
+      if (checkOverNight(parseItem)) {
+        var split = splitOverNight(parseItem);
+        finanlyArr.push(split[0]);
+        finanlyArr.push(split[1]);
+      } else {
+        finanlyArr.push(parseItem);
+      }
+      return null;
     });
     var where = {
-      saveDate: finanlyArr[1].saveDate 
+      saveDate: {
+        inq: saveDates
+      }
     };
     TimeLog.destroyAll(where)
     .then(function(res) {
+      console.info("Log: delete " + res.count + " records from database.");
       return TimeLog.create(finanlyArr);
     }).then(function(res) {
-      callback(null, "update success.");
+      console.info("Log: update database success.");
+      return callback(null, "success.");
     }).catch(function(err) {
       callback(err);
     });
@@ -68,7 +142,6 @@ module.exports = function(TimeLog) {
     var saveDate = dateFormat(yesterday, 'isoDate');
     var startDate = dateFormat(new Date(new Date(saveDate) - periodDay), 'isoDate');
     date = date || saveDate;
-    console.dir(yesterday);
     var filter = {
       where: {
         and: [
@@ -77,23 +150,38 @@ module.exports = function(TimeLog) {
         ]
       }
     };
+
+    var groupByDate = function groupByDate(arr) {
+      var keys = [];
+      var output = {};
+      arr.forEach(function(i) {
+        var saveDate = toLocal(i.__data.saveDate).replace(/\/\d{4}.*$/, "");
+        var data = {
+          label: i.__data.label,
+          start: toLocal(i.__data.start),
+          end: toLocal(i.__data.end),
+          saveDate,
+          duration: (i.__data.end - i.__data.start) / 1000 / 60
+        };
+        if (keys.indexOf(saveDate) === -1) {
+          keys.push(saveDate);
+          output[saveDate] = [];
+        }
+        output[saveDate].push(data);
+      });
+      return output;
+    };
+
     TimeLog.find(filter).then(function(res) {
-      callback(null, res);
+      var displayData = rules(groupByDate(res));
+      callback(null, displayData);
     }).catch(function(err) {
       callback(err);
     });
-    // console.dir(startDate);
-    // callback(null, saveDate);
     
   };
 
   /***************** Defind remote method *******************/
-
-  TimeLog.remoteMethod('updateToday', {
-    returns: { type: "string", arg: "update"},
-    http: { verb: 'get', path: '/update', status: 200 },
-    description: 'Read report.txt file and create new records in Postgres.'
-  });
 
   TimeLog.remoteMethod('month', {
     accepts: [{

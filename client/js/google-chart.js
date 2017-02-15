@@ -2,7 +2,6 @@ var table = function table(json) {
 
   var rawDate = JSON.parse(json);
   var weeks = [];
-  console.dir(rawDate);
 
   google.charts.load('current', {'packages':['table']});
   google.charts.setOnLoadCallback(drawTable);
@@ -12,15 +11,16 @@ var table = function table(json) {
 
     function addDate() {
       rawDate.forEach(function(oneDay) {
-        var weekLable = ["星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+        var weekLable = ["Sun", "Mon", "Tue", "Web", "Thu", "Fri", "Sat"];
         var week = new Date(oneDay.saveDate).getDay();
         weeks.push(weekLable[week]);
-        data.addColumn("string", oneDay.saveDate.replace(/T.*$/, ""));
+        var displayDate = oneDay.saveDate.replace(/T.*$/, "").replace(/^\d+-/, "");
+        data.addColumn("string", displayDate);
       });
     }
 
     function addWeeks() {
-      weeks.unshift("星期");
+      weeks.unshift("Week");
       data.addRows([weeks]);
     }
 

@@ -13,7 +13,7 @@ module.exports = {
    * note: we need use snakeCase in qs
    */
   qs: {
-    period: 3
+    period: 4
     // page: 1,
     // per_page: 2,
   },
