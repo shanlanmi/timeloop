@@ -17,14 +17,13 @@ var analyseOneDay = function(oneDay) {
   var keys = _.uniq(keys);
 
   // get sum
-  var sums = _.sumBy(oneDay, function(obj) {
-    return obj.duration;
-  })
   keys.forEach(function(key) {
     sum = 0;
     oneDay.forEach(function(oneTask) {
-      if (oneTask.label !== key) { return; }
-      sum += oneTask.duration;
+      if (oneTask.label === key) {
+        return sum += oneTask.duration;
+      }
+      return null;
     });
     output[key] = {
       sum
@@ -35,8 +34,6 @@ var analyseOneDay = function(oneDay) {
   keys.forEach(function(key) {
     output[key].count = counts[key];
   });
-
-  console.dir(output);
   return output;
   
 };

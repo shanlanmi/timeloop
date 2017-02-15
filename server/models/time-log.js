@@ -104,12 +104,12 @@ module.exports = function(TimeLog) {
       }
 
       var parseItem = parseSigleItem(item);
-      if (saveDates.indexOf(parseItem.saveDate) === -1) {
-        saveDates.push(parseItem.saveDate);
-      }
 
       parseItem.forEach(function(i) {
         finanlyArr.push(i);
+        if (saveDates.indexOf(i.saveDate) === -1) {
+          saveDates.push(i.saveDate);
+        }
       });
     });
     var where = {
