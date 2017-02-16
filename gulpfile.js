@@ -43,10 +43,7 @@ var autoReq = function() {
  * daily
  */
 gulp.task('default', ['source'], function () {
-  setTimeout(function() {
-    console.dir('123');
-    sh.exec('open client/index.html');
-  }, 3000);
+  sh.exec('open client/index.html');
   sh.exec('node .');
 });
 /* usage example:

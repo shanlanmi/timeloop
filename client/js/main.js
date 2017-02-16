@@ -18,4 +18,6 @@ function loadDoc() {
   xhttp.send();
 }
 
-loadDoc();
+setTimeout(function() {
+  loadDoc();
+}, 4500);
