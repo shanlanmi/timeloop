@@ -149,6 +149,7 @@ var table = function table(json) {
       width: '100%',
       height: '100%',
     });
+    document.querySelector('.spinner').style.display = 'none';
   }
 
   google.charts.setOnLoadCallback(drawTable);
