@@ -1,6 +1,4 @@
-var psErr = require('../../server/data/error-code.js');
 var dateFormat = require('dateformat');
-var _ = require('lodash');
 var rules = require('./lib/rules.js');
 
 module.exports = function(TimeLog) {
@@ -12,6 +10,7 @@ module.exports = function(TimeLog) {
     // ds.createModel(schema_v1.name, schema_v1.properties, schema_v1.options);
     ds.automigrate(function () {
       ds.discoverModelProperties('TimeLog', function (err, props) {
+        if (err) { console.error(err); }
         console.log(props);
       });
     });
@@ -19,7 +18,7 @@ module.exports = function(TimeLog) {
 
   var toLocal = function(date) {
     if (typeof date === "string" && /\+\d{2}/.test(date)) {
-      data = new Date(date.replace(/\+.*$/, ""));
+      date = new Date(date.replace(/\+.*$/, ""));
     }
     var local = date.toLocaleString('en-US', {
       hour12: false,
@@ -59,7 +58,6 @@ module.exports = function(TimeLog) {
   };
 
   var parseSigleItem = function(str) {
-    var output = [];
     var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
     var today = new Date();
     var year = today.getFullYear();
@@ -67,7 +65,7 @@ module.exports = function(TimeLog) {
     var end = new Date(arr[2]).setFullYear(year);
     if (checkOverNight(start, end)) {
       var middleNight = toStartDay(end);
-      return output = [{
+      return [{
         label: arr[0],
         saveDate: toUTC(toStartDay(start)),
         start: toUTC(start),
@@ -78,14 +76,13 @@ module.exports = function(TimeLog) {
         start: toUTC(middleNight),
         end: toUTC(end),
       }];
-    } else {
-      return output = [{
-        label: arr[0],
-        saveDate: toUTC(toStartDay(start)),
-        start: toUTC(start),
-        end: toUTC(end),
-      }];
     }
+    return [{
+      label: arr[0],
+      saveDate: toUTC(toStartDay(start)),
+      start: toUTC(start),
+      end: toUTC(end),
+    }];
   };
 
   /***************** Define remote method logic *******************/
@@ -100,7 +97,8 @@ module.exports = function(TimeLog) {
         return;
       }
       if (/^,/.test(item)) {
-        return noTotal = true;
+        noTotal = true;
+        return;
       }
 
       var parseItem = parseSigleItem(item);
@@ -155,8 +153,8 @@ module.exports = function(TimeLog) {
           label: i.__data.label,
           start: toLocal(i.__data.start),
           end: toLocal(i.__data.end),
-          saveDate,
-          duration: (i.__data.end - i.__data.start) / 1000 / 60
+          saveDate: saveDate,
+          duration: (i.__data.end - i.__data.start) / 1000 / 60,
         };
         if (keys.indexOf(saveDate) === -1) {
           keys.push(saveDate);
@@ -173,7 +171,7 @@ module.exports = function(TimeLog) {
     }).catch(function(err) {
       callback(err);
     });
-    
+
   };
 
   /***************** Defind remote method *******************/
