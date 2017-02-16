@@ -130,7 +130,7 @@ module.exports = function(TimeLog) {
   TimeLog.month = function(date, period, callback) {
     period = period || 30;
     var oneDay = 24 * 60 * 60 * 1000;
-    var periodDay = (period - 1) * oneDay;
+    var periodDay = period * oneDay;
     var yesterday = new Date(new Date() - oneDay);
     var saveDate = dateFormat(yesterday, 'isoDate');
     var startDate = dateFormat(new Date(new Date(saveDate) - periodDay), 'isoDate');
@@ -141,7 +141,8 @@ module.exports = function(TimeLog) {
           { saveDate: { gt: startDate } },
           { saveDate: { lte: saveDate } }
         ]
-      }
+      },
+      order: 'start ASC',
     };
 
     var groupByDate = function groupByDate(arr) {
