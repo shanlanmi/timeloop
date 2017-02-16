@@ -39,11 +39,21 @@ var autoReq = function() {
   }
 };
 
-/* usage example:
- * @ `gulp -m`: run app with nodemon
- * @ `gulp -a`: run app with auto request
+/**
+ * daily
  */
-gulp.task('default', ['source', 'sass', 'pug'], function () {
+gulp.task('default', ['source'], function () {
+  setTimeout(function() {
+    console.dir('123');
+    sh.exec('open client/index.html');
+  }, 3000);
+  sh.exec('node .');
+});
+/* usage example:
+ * @ `gulp run -m`: run app with nodemon
+ * @ `gulp run -a`: run app with auto request
+ */
+gulp.task('run', ['source', 'sass', 'pug'], function () {
   var opt = { script: 'server/server.js',
     ext: 'js json',
     ignore: ['ignored.js', 'client/js/*.js'],
