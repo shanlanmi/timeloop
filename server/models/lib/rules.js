@@ -56,7 +56,7 @@ var Rules = function(data) {
       ],
     },
     agileGoals: {
-      coreSleep: 3.5,
+      coreSleep: 3.5 * 60,
       lunch: 40,
       dinner: 30,
       cooking: 70,
@@ -69,12 +69,12 @@ var Rules = function(data) {
       breakTime: 20,
       breakAve: 4,
       breakPomodoroPercent: 0.5,
-      myTime: 10,
+      myTime: 10 * 60,
       myTimePercent: 0.6,
       napTime: 3,
       napMax: 30,
       passionalWorksPercent: 0.7,
-      sleep: 4.5,
+      sleep: 4.5 * 60,
       fun: 60,
     },
   };

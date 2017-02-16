@@ -7,7 +7,7 @@ function loadDoc() {
       table(xhttp.responseText);
     }
   };
-  xhttp.open("GET", "http://127.0.0.1:3100/api/Timelogs/month?period=3", true);
+  xhttp.open("GET", "http://127.0.0.1:3100/api/Timelogs/month?period=16", true);
   xhttp.send();
 }
 

@@ -6,7 +6,6 @@ var table = function table(json) {
    * deal with data from api
    */
   var rawData = JSON.parse(json);
-  console.dir(rawData);
   var labels = [];
 
   function capitalizeName(str) {
@@ -49,19 +48,27 @@ var table = function table(json) {
      * add rows
      */
     var rows = [];
+    var hourLabel = ['coreSleep', 'myTime', 'sleep'];
+    var percentLabel = ['breakPomodoroPercent', 'myTimePercent', 'passionalWorksPercent'];
 
     function checkGoal(label, value) {
       // gt means hight cell when value is greet then goal
-      var gt = ['fun'];
+      var gt = ['coreSleep', 'lunch', 'dinner', 'cooking', 'goodMorning', 'pomodoroAve',
+        'pomodoroMax', 'napMax', 'breakAve', 'sleep', 'fun'];
+      var lt = ['pomodoroTimes', 'myTime', 'myTimePercent', 'napTime'];
       var hightlight = "hightlight";
 
-      if (gt.indexOf(label)) {
+      if (gt.indexOf(label) !== -1) {
         if (value > rawData.goals[label]) {
           return hightlight;
         }
+        return "";
       }
-      if (value < rawData.goals[label]) {
-        return hightlight;
+      if (lt.indexOf(label) !== -1) {
+        if (value < rawData.goals[label]) {
+          return hightlight;
+        }
+        return "";
       }
       return "";
 
@@ -74,6 +81,11 @@ var table = function table(json) {
       labels.forEach(function(label, index) {
         var row = [];
         name = capitalizeName(label);
+        if (hourLabel.indexOf(label) !== -1) {
+          name = capitalizeName(label) + " (h)";
+        } else {
+          name = capitalizeName(label);
+        }
         row.push(name);
         rawData.index.forEach(function(i) {
           row.push("");
@@ -85,7 +97,13 @@ var table = function table(json) {
     function addGoals() {
       var name;
       labels.forEach(function(label, index) {
-        name = String(rawData.goals[label]);
+        if (hourLabel.indexOf(label) !== -1) {
+          name = String((rawData.goals[label] / 60).toFixed(1));
+        } else if (percentLabel.indexOf(label) !== -1) {
+          name = String((rawData.goals[label] * 100).toFixed(0) + "%");
+        } else {
+          name = String(rawData.goals[label]);
+        }
         rows[index].push(name);
       });
     }
@@ -95,7 +113,13 @@ var table = function table(json) {
       var specifyClass = "";
       rawData.index.forEach(function(oneDay, dateIndex) {
         labels.forEach(function(label, labelIndex) {
-          name = String(oneDay.rules[label]);
+          if (hourLabel.indexOf(label) !== -1) {
+            name = String((oneDay.rules[label] / 60).toFixed(1));
+          } else if (percentLabel.indexOf(label) !== -1) {
+            name = String((oneDay.rules[label] * 100).toFixed(0) + "%");
+          } else {
+            name = String(oneDay.rules[label]);
+          }
           specifyClass = checkGoal(label, oneDay.rules[label]);
           data.setCell(labelIndex + 1, dateIndex + 1, name, name, { className: specifyClass });
         });
@@ -119,7 +143,12 @@ var table = function table(json) {
 
     var table = new google.visualization.Table(document.getElementById('table_div'));
 
-    table.draw(data, { showRowNumber: true, width: '100%', height: '100%' });
+    table.draw(data, { 
+      showRowNumber: false,
+      frozenColumns: 1,
+      width: '100%',
+      height: '100%',
+    });
   }
 
   google.charts.setOnLoadCallback(drawTable);
