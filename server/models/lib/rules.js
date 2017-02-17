@@ -122,7 +122,7 @@ var Rules = function(data) {
         self.options.sum[sumType].forEach(function(task) {
           if (oneData.result[task]) {
             sum += oneData.result[task].sum;
-            max = max > oneData.result[task].sum ? max : oneData.result[task].sum;
+            max = max > oneData.result[task].max ? max : oneData.result[task].max;
           }
         });
         self.sums[oneData.date][sumType] = sum;
