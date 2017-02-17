@@ -32,11 +32,15 @@ var table = function table(json) {
         data.addColumn("string", oneDay.date);
       });
       data.addColumn("string", "Goal");
+      data.addColumn("string", "Ave");
     }
 
     function addWeeksColumn() {
       weeks.unshift("Week");
-      weeks.push("");
+      // for goals
+      weeks.push("-");
+      // for ave
+      weeks.push("-");
       data.addRows([weeks]);
     }
 
@@ -105,24 +109,38 @@ var table = function table(json) {
           name = String(rawData.goals[label]);
         }
         rows[index].push(name);
+        // for average column
+        rows[index].push("");
       });
+    }
+
+    function displayByLabel(label, value) {
+      if (hourLabel.indexOf(label) !== -1) {
+        return String((value / 60).toFixed(1));
+      } else if (percentLabel.indexOf(label) !== -1) {
+        return String((value * 100).toFixed(0) + "%");
+      }
+      return String(value.toFixed(0));
     }
 
     function addRules() {
       var name;
+      var sum;
+      var value;
       var specifyClass = "";
-      rawData.index.forEach(function(oneDay, dateIndex) {
-        labels.forEach(function(label, labelIndex) {
-          if (hourLabel.indexOf(label) !== -1) {
-            name = String((oneDay.rules[label] / 60).toFixed(1));
-          } else if (percentLabel.indexOf(label) !== -1) {
-            name = String((oneDay.rules[label] * 100).toFixed(0) + "%");
-          } else {
-            name = String(oneDay.rules[label]);
-          }
+      labels.forEach(function(label, labelIndex) {
+        sum = 0;
+        rawData.index.forEach(function(oneDay, dateIndex) {
+          sum += oneDay.rules[label];
+          name = displayByLabel(label, oneDay.rules[label]);
           specifyClass = checkGoal(label, oneDay.rules[label]);
           data.setCell(labelIndex + 1, dateIndex + 1, name, name, { className: specifyClass });
         });
+        value = sum / rawData.index.length;
+        name = displayByLabel(label, value);
+        specifyClass = checkGoal(label, value);
+        data.setCell(labelIndex + 1, rawData.index.length + 2, name, name,
+          { className: specifyClass });
       });
     }
 
