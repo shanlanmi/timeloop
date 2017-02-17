@@ -7,7 +7,6 @@ module.exports = function(TimeLog) {
 
   TimeLog.createTable = function() {
     var ds = TimeLog.app.dataSources.db;
-    // ds.createModel(schema_v1.name, schema_v1.properties, schema_v1.options);
     ds.automigrate(function () {
       ds.discoverModelProperties('TimeLog', function (err, props) {
         if (err) { console.error(err); }
