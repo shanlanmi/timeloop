@@ -1,5 +1,6 @@
 var dateFormat = require('dateformat');
 var rules = require('./lib/rules.js');
+var _ = require('lodash');
 
 module.exports = function(TimeLog) {
 
@@ -90,7 +91,15 @@ module.exports = function(TimeLog) {
     var rawArr = data.split('\n');
     var finanlyArr = [];
     var saveDates = [];
+    var destroyDates = [];
     var noTotal = false;
+    function findSaveDates(oneSave) {
+      var index = _.findIndex(saveDates, function(i) {
+        return i.date === oneSave;
+      });
+      return index;
+    }
+
     rawArr.forEach(function(item, index) {
       if (/Type,/.test(item) || item.length === 0 || noTotal) {
         return;
@@ -104,14 +113,25 @@ module.exports = function(TimeLog) {
 
       parseItem.forEach(function(i) {
         finanlyArr.push(i);
-        if (saveDates.indexOf(i.saveDate) === -1) {
-          saveDates.push(i.saveDate);
+        if (findSaveDates(i.saveDate) === -1) {
+          saveDates.push({
+            date: i.saveDate,
+            count: 1,
+          });
+        } else {
+          saveDates[findSaveDates(i.saveDate)].count += 1;
         }
       });
     });
+    saveDates.forEach(function(oneSave) {
+      if (oneSave.count === 1) {
+        return;
+      }
+      destroyDates.push(oneSave.date);
+    });
     var where = {
       saveDate: {
-        inq: saveDates
+        inq: destroyDates
       }
     };
     TimeLog.destroyAll(where)
