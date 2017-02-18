@@ -52,6 +52,7 @@ gulp.task('default', ['source'], function () {
  */
 gulp.task('run', ['source', 'sass', 'pug'], function () {
   var opt = { script: 'server/server.js',
+    // verbose: true,
     ext: 'js json',
     ignore: ['ignored.js', 'client/js/*.js'],
     tasks: ['sass', 'pug'],
