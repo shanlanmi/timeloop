@@ -50,7 +50,7 @@ gulp.task('default', ['source'], function () {
  * @ `gulp run -m`: run app with nodemon
  * @ `gulp run -a`: run app with auto request
  */
-gulp.task('run', ['source', 'sass', 'pug'], function () {
+gulp.task('dev', ['source', 'sass', 'pug'], function () {
   var opt = { script: 'server/server.js',
     // verbose: true,
     ext: 'js json',

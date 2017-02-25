@@ -70,8 +70,8 @@
       "scale": null,
       "postgresql": {
         "columnName": "saveDate",
-        "dataType": "date",
-        "dataLength": null,
+        "dataType": "character varying",
+        "dataLength": 255,
         "dataPrecision": null,
         "dataScale": null,
         "nullable": "NO"

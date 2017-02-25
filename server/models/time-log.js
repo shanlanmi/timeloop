@@ -57,50 +57,17 @@ module.exports = function(TimeLog) {
     return true;
   };
 
-  var parseSigleItem = function(str) {
-    var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
-    var today = new Date();
-    var year = today.getFullYear();
-    var start = new Date(arr[1]).setFullYear(year);
-    var end = new Date(arr[2]).setFullYear(year);
-    if (checkOverNight(start, end)) {
-      var middleNight = toStartDay(end);
-      return [{
-        label: arr[0],
-        saveDate: toUTC(toStartDay(start)),
-        start: toUTC(start),
-        end: toUTC(middleNight),
-      }, {
-        label: arr[0],
-        saveDate: toUTC(toStartDay(middleNight)),
-        start: toUTC(middleNight),
-        end: toUTC(end),
-      }];
-    }
-    return [{
-      label: arr[0],
-      saveDate: toUTC(toStartDay(start)),
-      start: toUTC(start),
-      end: toUTC(end),
-    }];
+  var getSaveDate = function(startDate) {
+    var start = new Date(startDate);
+    return dateFormat(start, 'isoDate');
   };
 
-  /***************** Define remote method logic *******************/
+  var rawToArr = function(raw) {
 
-  TimeLog.updateDatebase = function(data, callback) {
-    var rawArr = data.split('\n');
-    var finanlyArr = [];
-    var saveDates = [];
-    var destroyDates = [];
     var noTotal = false;
-    function findSaveDates(oneSave) {
-      var index = _.findIndex(saveDates, function(i) {
-        return i.date === oneSave;
-      });
-      return index;
-    }
-
-    rawArr.forEach(function(item, index) {
+    var output = [];
+    var splitArr = raw.split('\n');
+    splitArr.forEach(function(item) {
       if (/Type,/.test(item) || item.length === 0 || noTotal) {
         return;
       }
@@ -108,27 +75,93 @@ module.exports = function(TimeLog) {
         noTotal = true;
         return;
       }
-
-      var parseItem = parseSigleItem(item);
-
-      parseItem.forEach(function(i) {
-        finanlyArr.push(i);
-        if (findSaveDates(i.saveDate) === -1) {
-          saveDates.push({
-            date: i.saveDate,
-            count: 1,
-          });
-        } else {
-          saveDates[findSaveDates(i.saveDate)].count += 1;
-        }
-      });
+      output.push(item);
     });
-    saveDates.forEach(function(oneSave) {
-      if (oneSave.count === 1) {
+    return output;
+
+  };
+
+  var parseArr = function(arr) {
+    var output = [];
+    arr.forEach(function(str) {
+      var arr = str.replace(/",""$/, "").replace(/^"/, "").split(/","/);
+      var today = new Date();
+      var year = today.getFullYear();
+      var start = new Date(arr[1]).setFullYear(year);
+      var end = new Date(arr[2]).setFullYear(year);
+      if (checkOverNight(start, end)) {
+        var middleNight = toStartDay(end);
+        output.push({
+          label: arr[0],
+          saveDate: getSaveDate(start),
+          start: toUTC(start),
+          end: toUTC(middleNight),
+        });
+        output.push({
+          label: arr[0],
+          saveDate: getSaveDate(middleNight),
+          start: toUTC(middleNight),
+          end: toUTC(end),
+        });
         return;
       }
-      destroyDates.push(oneSave.date);
+      output.push({
+        label: arr[0],
+        saveDate: getSaveDate(start),
+        start: toUTC(start),
+        end: toUTC(end),
+      });
     });
+    return output;
+  };
+
+  var sigleCoreFilter = function(arr) {
+
+    var saveDateCounts = [];
+    var sigleCoreDates = [];
+    var outputArr = [];
+    var saveDateArr = [];
+    function findSaveDates(oneSave) {
+      return _.findIndex(saveDateCounts, function(i) {
+        return i.date === oneSave;
+      });
+    }
+    arr.forEach(function(item) {
+      if (findSaveDates(item.saveDate) === -1) {
+        saveDateCounts.push({
+          date: item.saveDate,
+          count: 1,
+        });
+      } else {
+        saveDateCounts[findSaveDates(item.saveDate)].count += 1;
+      }
+    });
+    saveDateCounts.forEach(function(oneSave) {
+      if (oneSave.count < 2) {
+        sigleCoreDates.push(oneSave.date);
+      } else {
+        saveDateArr.push(oneSave.date);
+      }
+    });
+    arr.forEach(function(item) {
+      if (sigleCoreDates.indexOf(item.saveDate) === -1) {
+        outputArr.push(item);
+      }
+    });
+    return [outputArr, saveDateArr];
+
+  };
+
+
+  /***************** Define remote method logic *******************/
+
+  TimeLog.updateDatebase = function(data, callback) {
+    var dateArr = rawToArr(data);
+    dateArr = parseArr(dateArr);
+    var filterResult = sigleCoreFilter(dateArr);
+    dateArr = filterResult[0];
+    var destroyDates = filterResult[1];
+
     var where = {
       saveDate: {
         inq: destroyDates
@@ -137,7 +170,7 @@ module.exports = function(TimeLog) {
     TimeLog.destroyAll(where)
     .then(function(res) {
       console.info("Log: delete " + res.count + " records from database.");
-      return TimeLog.create(finanlyArr);
+      return TimeLog.create(dateArr);
     }).then(function(res) {
       console.info("Log: update database success.");
       return callback(null, "success.");
@@ -151,14 +184,16 @@ module.exports = function(TimeLog) {
     var oneDay = 24 * 60 * 60 * 1000;
     var periodDay = period * oneDay;
     var yesterday = new Date(new Date() - oneDay);
-    var saveDate = dateFormat(yesterday, 'isoDate');
-    var startDate = dateFormat(new Date(new Date(saveDate) - periodDay), 'isoDate');
-    date = date || saveDate;
+    yesterday.setHours(23);
+    yesterday.setMinutes(59);
+    var endDate = yesterday.toISOString();
+    var startDate = dateFormat(new Date(new Date(endDate) - periodDay), 'isoDate');
+    date = date || endDate;
     var filter = {
       where: {
         and: [
-          { saveDate: { gt: startDate } },
-          { saveDate: { lte: saveDate } }
+          { start: { gt: startDate } },
+          { start: { lte: endDate } }
         ]
       },
       order: 'start ASC',
@@ -168,7 +203,7 @@ module.exports = function(TimeLog) {
       var keys = [];
       var output = {};
       arr.forEach(function(i) {
-        var saveDate = toLocal(i.__data.saveDate).replace(/\/\d{4}.*$/, "");
+        var saveDate = i.__data.saveDate;
         var data = {
           label: i.__data.label,
           start: toLocal(i.__data.start),

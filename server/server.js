@@ -1,3 +1,4 @@
+/* global getDir */
 'use strict';
 
 var loopback = require('loopback');
@@ -30,8 +31,9 @@ boot(app, __dirname, function(err) {
   };
 
   // start the server if `$ node server.js`
-  if (require.main === module)
+  if (require.main === module) {
     app.start();
+  }
 
   setTimeout(function () {
     var dir = getDir("./data/report.txt");
@@ -41,7 +43,7 @@ boot(app, __dirname, function(err) {
     // app.models.TimeLog.createTable();
     app.models.TimeLog.updateDatebase(reportData, function(err, res) {
       if (err) { return console.error(err); }
-      return;
+      return null;
     });
   }, 500);
 });
