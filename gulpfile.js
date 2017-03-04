@@ -46,6 +46,14 @@ gulp.task('default', ['source'], function () {
   sh.exec('open client/index.html');
   sh.exec('node .');
 });
+
+/**
+ * update database
+ */
+gulp.task('data', ['source'], function () {
+  sh.exec('node .');
+});
+
 /* usage example:
  * @ `gulp run -m`: run app with nodemon
  * @ `gulp run -a`: run app with auto request
