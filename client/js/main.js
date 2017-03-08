@@ -20,4 +20,4 @@ function loadDoc() {
 
 setTimeout(function() {
   loadDoc();
-}, 4500);
+}, 6500);
