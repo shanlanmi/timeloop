@@ -3,7 +3,7 @@ var path = require('path');
 var changed = require('gulp-changed');
 var fs = require('fs');
 var sh = require('shelljs');
-var notify = require("gulp-notify")
+var notify = require("gulp-notify");
 var nodemon = require('gulp-nodemon');
 var argv = require('yargs').argv;
 var pug = require('gulp-pug');
@@ -43,7 +43,9 @@ var autoReq = function() {
  * daily
  */
 gulp.task('default', ['source'], function () {
-  sh.exec('open client/index.html');
+  if (!argv.d) {
+    sh.exec('open client/index.html');
+  }
   sh.exec('node .');
 });
 
@@ -98,28 +100,28 @@ var watchs = {
 };
 
 gulp.task('pug', function() {
-  var pugCompile = pug({pretty: true});
+  var pugCompile = pug({ pretty: true });
   pugCompile.on('error', function(err) {
     console.error(err);
-    pugCompile.end()
+    pugCompile.end();
   });
   var dest = './client';
   return gulp.src(watchs.pug)
-    .pipe(changed(dest, {extension: '.html'}))
+    .pipe(changed(dest, { extension: '.html' }))
     .pipe(pugCompile)
     .pipe(notifier('pug compile run again'))
     .pipe(gulp.dest(dest));
 });
 
 gulp.task('sass', function() {
-  var sassCompile = sass({pretty: true});
+  var sassCompile = sass({ pretty: true });
   sassCompile.on('error', function(err) {
     console.error(err);
-    sassCompile.end()
+    sassCompile.end();
   });
   var dest = './client/css/';
   return gulp.src(watchs.sass)
-    .pipe(changed(dest, {extension: '.css'}))
+    .pipe(changed(dest, { extension: '.css' }))
     .pipe(sassCompile)
     .pipe(notifier('sass compile run again'))
     .pipe(gulp.dest(dest));
@@ -134,51 +136,27 @@ gulp.task('watch', function() {
   gulp.watch(watchs.pug, ['pug']);
 });
 
+gulp.task('exit', function() {
+  process.exit();
+});
+
 /***********************   Watch   ***********************/
 gulp.task('source', function() {
-  sh.exec('rm ~/Documents/personal/timeloop/server/data/report.csv');
-  var exist = fs.existsSync('/Users/shanlanmi/Downloads/report.csv');
+  var filename = 'report';
+  try {
+    sh.exec('rm ~/Documents/personal/timeloop/server/data/' + filename + '.csv');
+  } catch (err) {
+    console.error(err);
+  }
+  var exist = fs.existsSync('/Users/shanlanmi/Downloads/' + filename + '.csv');
   if (!exist) {
-    console.error("'report.csv' is not exist, please get report data from <https://app.atimelogger.com/#/reports/4>");
+    console.error(filename + '.csv is not exist, please get ' + filename + ' data from <https://app.atimelogger.com/#/reports/4>');
+    return gulp.start('exit');
   }
-  sh.exec('cp ~/Downloads/report.csv ~/Documents/personal/timeloop/server/data/report.txt');
+  if (argv.d) {
+    sh.exec('cp ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/' + filename + '.txt');
+  } else {
+    sh.exec('mv ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/' + filename + '.txt');
+  }
 });
 
-/***********************   DataSource   ***********************/
-
-function createTableByModelDefinition(ds, models) {
-  if (models && models.length > 0) {
-    ds.automigrate(models, function (err) {
-      if (err) return console.error(err);
-      return console.log('Congratulation, auto migration completed!');
-    });
-  } else {
-    return console.error('Please specify model name!');
-  }
-  return null;
-}
-
-/**
- * This task has some bug.
- *
- */
-gulp.task('db:automigrate', function () {
-  var app = require('./server/server.js');
-  var ds = app.dataSources.db;
-
-  if (!argv.m) {
-    return console.error('Please specify task arguments! Available arguments: --m=model1[model2, model3...]');
-  }
-  var model = argv.m;
-
-  console.dir(model);
-  if (model) {
-    ds.automigrate(model, function (err) {
-      if (err) return console.error(err);
-      return console.log('Congratulation, auto migration completed!');
-    });
-  } else {
-    return console.error('Please specify model name!');
-  }
-  return null;
-});
