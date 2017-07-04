@@ -55,27 +55,42 @@ var table = function table(json) {
     var hourLabel = ['coreSleep', 'myTime', 'sleep'];
     var percentLabel = ['breakPomodoroPercent', 'myTimePercent', 'passionalWorksPercent'];
 
+    function setSpecialClass(label, value, date) {
+      var className = [];
+      if (checkGoal(label, value)) {
+        className.push('hightlight');
+      }
+      if (checkNotToday(date)) {
+        className.push('notToday');
+      }
+      return className.join(' ');
+    };
+
     function checkGoal(label, value) {
       // gt means hight cell when value is greet then goal
       var gt = ['coreSleep', 'lunch', 'dinner', 'cooking', 'goodMorning', 'pomodoroAve',
         'pomodoroMax', 'napMax', 'breakAve', 'sleep', 'fun'];
       var lt = ['pomodoroTimes', 'myTime', 'myTimePercent', 'napTime'];
-      var hightlight = "hightlight";
 
       if (gt.indexOf(label) !== -1) {
         if (value > rawData.goals[label]) {
-          return hightlight;
+          return true;
         }
-        return "";
+        return false;
       }
       if (lt.indexOf(label) !== -1) {
         if (value < rawData.goals[label]) {
-          return hightlight;
+          return true;
         }
-        return "";
+        return false;
       }
-      return "";
+      return false;
+    }
 
+    function checkNotToday(date) {
+      var today = new Date();
+      var todayStr = today.toISOString().replace(/T.*$/, "");
+      return todayStr !== String(date);
     }
 
     function addLabels() {
@@ -133,12 +148,12 @@ var table = function table(json) {
         rawData.index.forEach(function(oneDay, dateIndex) {
           sum += oneDay.rules[label];
           name = displayByLabel(label, oneDay.rules[label]);
-          specifyClass = checkGoal(label, oneDay.rules[label]);
+          specifyClass = setSpecialClass(label, oneDay.rules[label], oneDay.date);
           data.setCell(labelIndex + 1, dateIndex + 1, name, name, { className: specifyClass });
         });
         value = sum / rawData.index.length;
         name = displayByLabel(label, value);
-        specifyClass = checkGoal(label, value);
+        specifyClass = setSpecialClass(label, value);
         data.setCell(labelIndex + 1, rawData.index.length + 2, name, name,
           { className: specifyClass });
       });
@@ -161,13 +176,12 @@ var table = function table(json) {
 
     var table = new google.visualization.Table(document.getElementById('table_div'));
 
-    table.draw(data, { 
+    table.draw(data, {
       showRowNumber: false,
       frozenColumns: 1,
       width: '100%',
       height: '100%',
     });
-    document.querySelector('.spinner').style.display = 'none';
   }
 
   google.charts.setOnLoadCallback(drawTable);
