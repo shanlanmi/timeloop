@@ -1,7 +1,7 @@
 var _ = require('lodash');
 
 var Rules = function(data) {
-  this.data = data;
+  this.data;
   this.options = {
     count: {
       pomodoro: [
@@ -66,6 +66,7 @@ var Rules = function(data) {
       pomodoroTimes: 20,
       pomodoroAve: 30,
       pomodoroMax: 35,
+      pomodoroMin: 23,
       breakTime: 20,
       breakAve: 4,
       breakPomodoroPercent: 0.6,
@@ -99,8 +100,8 @@ var Rules = function(data) {
       countKeys.forEach(function(countType) {
         var count = 0;
         self.options.count[countType].forEach(function(task) {
-          if (oneData.result[task]) {
-            count += oneData.result[task].count;
+          if (oneData.result[task] && oneData.result[task][countType+'Count']) {
+            count += oneData.result[task][countType+'Count'];
           }
         });
         self.counts[oneData.date][countType] = count;
@@ -201,8 +202,71 @@ var Rules = function(data) {
     });
   };
 
+  this.analyseOneDay = function (oneDay) {
+    var output = {};
+    var sum;
+    var pomodoroCount;
+    var max;
+    var self = this;
+
+    // get keys
+    var keys = [];
+    oneDay.forEach(function (obj) {
+      keys.push(obj.label);
+    });
+    var counts = _.countBy(keys);
+    keys = _.uniq(keys);
+
+    // get sum and max
+    keys.forEach(function (key) {
+      sum = 0;
+      max = 0;
+      pomodoroCount = 0;
+      oneDay.forEach(function (oneTask) {
+        if (oneTask.label === key) {
+          if (self.options.count.pomodoro.indexOf(oneTask.label) !== -1 &&
+            oneTask.duration >= self.options.goals.pomodoroMin) {
+            pomodoroCount += 1;
+          }
+          sum += oneTask.duration;
+          max = max > oneTask.duration ? max : oneTask.duration;
+        }
+        return null;
+      });
+      output[key] = {
+        sum: sum,
+        max: max,
+        pomodoroCount: pomodoroCount
+      };
+    });
+
+    // get count
+    keys.forEach(function (key) {
+      output[key].count = counts[key];
+    });
+
+    return output;
+
+};
+
+  this.getSum = function (data) {
+    var self = this;
+    var sumRes = [];
+    var keys = Object.keys(data);
+
+    keys.forEach(function (key) {
+      var result = self.analyseOneDay(data[key]);
+      sumRes.push({
+        date: key,
+        result: result
+      });
+    });
+    return sumRes;
+  };
+
   this.main = function() {
     this.init();
+    this.data = this.getSum(data);
     this.getCount();
     this.getSumAndMax();
     this.getIndex();
@@ -211,61 +275,9 @@ var Rules = function(data) {
 
 };
 
-var analyseOneDay = function(oneDay) {
-  var output = {};
-  var sum;
-  var max;
-
-  // get keys
-  var keys = [];
-  oneDay.forEach(function(obj) {
-    keys.push(obj.label);
-  });
-  var counts = _.countBy(keys);
-  keys = _.uniq(keys);
-
-  // get sum and max
-  keys.forEach(function(key) {
-    sum = 0;
-    max = 0;
-    oneDay.forEach(function(oneTask) {
-      if (oneTask.label === key) {
-        sum += oneTask.duration;
-        max = max > oneTask.duration ? max : oneTask.duration;
-      }
-      return null;
-    });
-    output[key] = {
-      sum: sum,
-      max: max,
-    };
-  });
-
-  // get count
-  keys.forEach(function(key) {
-    output[key].count = counts[key];
-  });
-
-  return output;
-
-};
-
-var getSum = function(data) {
-  var sumRes = [];
-  var keys = Object.keys(data);
-
-  keys.forEach(function(key) {
-    var result = analyseOneDay(data[key]);
-    sumRes.push({
-      date: key,
-      result: result
-    });
-  });
-  return sumRes;
-};
 
 module.exports = function(data) {
-  var myRules = new Rules(getSum(data));
+  var myRules = new Rules(data);
   return myRules.main();
 };
 
