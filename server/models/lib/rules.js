@@ -2,6 +2,7 @@ var _ = require('lodash');
 
 var Rules = function(data) {
   this.data;
+  this.pomodoroMin = 23;
   this.options = {
     count: {
       pomodoro: [
@@ -66,7 +67,6 @@ var Rules = function(data) {
       pomodoroTimes: 20,
       pomodoroAve: 30,
       pomodoroMax: 35,
-      pomodoroMin: 23,
       breakTime: 20,
       breakAve: 4,
       breakPomodoroPercent: 0.6,
@@ -225,7 +225,7 @@ var Rules = function(data) {
       oneDay.forEach(function (oneTask) {
         if (oneTask.label === key) {
           if (self.options.count.pomodoro.indexOf(oneTask.label) !== -1 &&
-            oneTask.duration >= self.options.goals.pomodoroMin) {
+            oneTask.duration >= self.pomodoroMin) {
             pomodoroCount += 1;
           }
           sum += oneTask.duration;
