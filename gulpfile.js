@@ -43,9 +43,7 @@ var autoReq = function() {
  * daily
  */
 gulp.task('default', ['source'], function () {
-  if (!argv.d) {
-    sh.exec('open client/index.html');
-  }
+  sh.exec('open client/index.html');
   sh.exec('node .');
 });
 
