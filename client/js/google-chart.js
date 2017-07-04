@@ -52,7 +52,7 @@ var table = function table(json) {
      * add rows
      */
     var rows = [];
-    var hourLabel = ['coreSleep', 'myTime', 'sleep'];
+    var hourLabel = ['coreSleep', 'myTime', 'sleep', 'secure'];
     var percentLabel = ['breakPomodoroPercent', 'myTimePercent', 'passionalWorksPercent'];
 
     function setSpecialClass(label, value, date) {
@@ -69,7 +69,7 @@ var table = function table(json) {
     function checkGoal(label, value) {
       // gt means hight cell when value is greet then goal
       var gt = ['coreSleep', 'lunch', 'dinner', 'cooking', 'goodMorning', 'pomodoroAve',
-        'pomodoroMax', 'napMax', 'breakAve', 'sleep', 'fun'];
+        'pomodoroMax', 'napMax', 'breakAve', 'sleep', 'fun', 'secure'];
       var lt = ['pomodoroTimes', 'myTime', 'myTimePercent', 'napTime'];
 
       if (gt.indexOf(label) !== -1) {

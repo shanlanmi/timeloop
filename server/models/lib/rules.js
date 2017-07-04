@@ -39,6 +39,7 @@ var Rules = function(data) {
         'healthCare',
         'Social',
         'Family',
+        'Secure',
         'Cat',
       ],
       sleep: ['CoreSleep', 'Nap'],
@@ -62,6 +63,7 @@ var Rules = function(data) {
       dinner: 30,
       cooking: 70,
       goodMorning: 40,
+      secure: 120
     },
     goals: {
       pomodoroTimes: 20,
@@ -187,6 +189,9 @@ var Rules = function(data) {
       index.rules.fun = sums.fun;
       // sleep
       index.rules.sleep = sums.sleep;
+      // secure
+      // index.rules.Secure = Number((sums.secure / 60));
+      // index.rules.Secure = sums.secure;
       // agile goals
       var agileRules = function() {
         var goalNames = Object.keys(self.options.agileGoals);
