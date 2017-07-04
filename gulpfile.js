@@ -140,7 +140,7 @@ gulp.task('exit', function() {
 
 /***********************   Watch   ***********************/
 gulp.task('source', function() {
-  var filename = 'report';
+  var filename = 'download';
   try {
     sh.exec('rm ~/Documents/personal/timeloop/server/data/' + filename + '.csv');
   } catch (err) {
@@ -152,9 +152,9 @@ gulp.task('source', function() {
     return gulp.start('exit');
   }
   if (argv.d) {
-    sh.exec('cp ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/' + filename + '.txt');
+    sh.exec('cp ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
   } else {
-    sh.exec('mv ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/' + filename + '.txt');
+    sh.exec('mv ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
   }
 });
 
