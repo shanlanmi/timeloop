@@ -1,5 +1,4 @@
 var gulp = require('gulp');
-var path = require('path');
 var changed = require('gulp-changed');
 var fs = require('fs');
 var sh = require('shelljs');
@@ -140,21 +139,27 @@ gulp.task('exit', function() {
 
 /***********************   Watch   ***********************/
 gulp.task('source', function() {
-  var filename = 'download';
+  var filenames = ['report', 'download'];
   try {
-    sh.exec('rm ~/Documents/personal/timeloop/server/data/' + filename + '.csv');
-  } catch (err) {
-    console.error(err);
-  }
-  var exist = fs.existsSync('/Users/shanlanmi/Downloads/' + filename + '.csv');
-  if (!exist) {
-    console.error(filename + '.csv is not exist, please get ' + filename + ' data from <https://app.atimelogger.com/#/reports/4>');
+    filenames.forEach(function(filename) {
+      sh.exec('rm ~/Documents/personal/timeloop/server/data/' + filename + '.csv');
+    });
+  } catch (err) {}
+  var currentFilename;
+  filenames.forEach(function(filename) {
+    var dir = '/Users/shanlanmi/Downloads/' + filename + '.csv';
+    if (fs.existsSync(dir)) {
+      currentFilename = dir;
+    }
+  });
+  if (!currentFilename) {
+    console.error('csv file is not exist, please get data from <https://app.atimelogger.com/#/reports/4>');
     return gulp.start('exit');
   }
   if (argv.d) {
-    sh.exec('cp ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
+    sh.exec('cp ~/Downloads/' + currentFilename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
   } else {
-    sh.exec('mv ~/Downloads/' + filename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
+    sh.exec('mv ~/Downloads/' + currentFilename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
   }
 });
 
