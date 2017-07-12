@@ -145,21 +145,22 @@ gulp.task('source', function() {
       sh.exec('rm ~/Documents/personal/timeloop/server/data/' + filename + '.csv');
     });
   } catch (err) {}
-  var currentFilename;
+  var currentFileDir;
   filenames.forEach(function(filename) {
-    var dir = '/Users/shanlanmi/Downloads/' + filename + '.csv';
+    var dir = '~/Downloads/' + filename + '.csv';
     if (fs.existsSync(dir)) {
-      currentFilename = dir;
+      currentFileDir = dir;
     }
   });
-  if (!currentFilename) {
+  if (!currentFileDir) {
     console.error('csv file is not exist, please get data from <https://app.atimelogger.com/#/reports/4>');
     return gulp.start('exit');
   }
   if (argv.d) {
-    sh.exec('cp ~/Downloads/' + currentFilename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
+    sh.exec('cp ' + currentFileDir + ' ~/Documents/personal/timeloop/server/data/report.txt');
   } else {
-    sh.exec('mv ~/Downloads/' + currentFilename + '.csv ~/Documents/personal/timeloop/server/data/report.txt');
+    console.log('mv ' + currentFileDir + ' ~/Documents/personal/timeloop/server/data/report.txt');
+    sh.exec('mv ' + currentFileDir + ' ~/Documents/personal/timeloop/server/data/report.txt');
   }
 });
 
