@@ -1,6 +1,6 @@
 {
   "db": {
-    "url": "postgres://shanlanmi@localhost:5432/shanlanmi",
+    "url": "postgres://shanlanmi@localhost:5432/timeloop",
     "connector": "postgresql"
   }
 }

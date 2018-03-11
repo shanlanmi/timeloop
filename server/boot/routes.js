@@ -9,10 +9,10 @@ module.exports = function(app) {
   }
 
   app.get('/', function(req, res) {
-    res.sendFile(dir('client/templates/index.html'));
+    res.sendFile(dir('client/index.html'));
   });
 
   app.get('/task', function(req, res) {
-    res.sendFile(dir('client/templates/task.html'));
+    res.sendFile(dir('client/task.html'));
   });
 };

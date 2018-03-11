@@ -22,6 +22,14 @@ var notifier = function(str) {
 
 var autoReq = function() {
   function callback(error, response, body) {
+    if (error && /8118/.test(error.Error)) {
+      console.error("Error: need open port 8118 proxy.");
+      return;
+    }
+    if (error) {
+      console.error(error);
+      return;
+    }
     if (!error && response.statusCode === 200) {
       console.info("\n>>> response start");
       var info = JSON.parse(body);
@@ -31,8 +39,8 @@ var autoReq = function() {
   }
   if (argv.a) {
     var message = "Auto request: '" + reqOpt.method + " " + reqOpt.baseUrl + reqOpt.uri + "'";
-    console.info(message);
     setTimeout(function () {
+      console.info(message);
       request(reqOpt, callback);
     }, 8000);
   }
@@ -42,8 +50,10 @@ var autoReq = function() {
  * daily
  */
 gulp.task('default', ['source'], function () {
-  sh.exec('open client/index.html');
   sh.exec('node .');
+  setTimeout(() => {
+    sh.exec('open http://localhost:3100/');
+  }, 2000);
 });
 
 /**
@@ -92,7 +102,7 @@ var watchs = {
   sass: ['./sass/**/*.scss', './sass/**/*.sass'],
   css: ['./client/css/*.css'],
   pug: ['./pug/**/*.pug'],
-  html: ['./client/templates/**/*.html'],
+  html: ['./client/**/*.html'],
   alljs: ['./client/**/*.js', './server/**/*.js']
 };
 
@@ -147,14 +157,14 @@ gulp.task('source', function() {
   } catch (err) {}
   var currentFileDir;
   filenames.forEach(function(filename) {
-    var dir = '~/Downloads/' + filename + '.csv';
+    var dir = '/Users/shanlanmi/Downloads/' + filename + '.csv';
     if (fs.existsSync(dir)) {
       currentFileDir = dir;
     }
   });
   if (!currentFileDir) {
     console.error('csv file is not exist, please get data from <https://app.atimelogger.com/#/reports/4>');
-    return gulp.start('exit');
+    return;
   }
   if (argv.d) {
     sh.exec('cp ' + currentFileDir + ' ~/Documents/personal/timeloop/server/data/report.txt');
